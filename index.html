@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+    <head>
+        <meta charset="windows-1251">
+		<title></title>
+		<style>
+		body{
+			height:100%;
+			width:100%;
+			margin:0px;
+			padding:0px;
+			font-family:tahoma;
+			font-size:12px;
+		}
+		div{
+			margin:5px;
+		}
+		</style>
+	</head>
+
+<body>
+<div> url палитры:<input type="Text" id="palette"> url картинки:<input type="Text" id="image"><input type="button" value="рисовать" onclick="init()"></div>
+<div id="wait"></div>
+<canvas id="can">Canvas</canvas> <!--width="2562" height="1943"-->
+
+
+<script type="text/javascript">
+
+function imageLoaded(event){
+
+	if (window.XMLHttpRequest){// IE7+, Firefox, Chrome, Opera, Safari
+		xmlhttp=new XMLHttpRequest();
+	}
+	
+	xmlhttp.open("GET", xml_url, false);
+	xmlhttp.send();
+	xmlDoc=xmlhttp.responseXML;
+
+	var x=xmlDoc.getElementsByTagName("ENTRY");
+	var palette = [];
+
+	for(i=0;i<x.length;i++){
+		r = x[i].getElementsByTagName("Color")[0].getElementsByTagName("Part_Red")[0].childNodes[0].nodeValue;
+		g = x[i].getElementsByTagName("Color")[0].getElementsByTagName("Part_Green")[0].childNodes[0].nodeValue;
+		b = x[i].getElementsByTagName("Color")[0].getElementsByTagName("Part_Blue")[0].childNodes[0].nodeValue;
+		palette[parseInt(x[i].getElementsByTagName("Code")[0].childNodes[0].nodeValue)]=[r,g,b];			
+	}	
+
+    element = document.getElementById("can");
+    c = element.getContext("2d");
+	
+    im = event.target; 
+
+	element.width = im.width;
+	element.height = im.height;
+	
+    width = element.width;
+    height = element.height;
+
+    c.drawImage(im, 0, 0);
+
+    imageData = c.getImageData(0, 0, width, height);
+
+
+    for(y = 0; y < height; y++){
+        inpos = y * width * 4;
+        outpos = inpos;
+		
+        for(x = 0; x < width; x++){
+		
+            r = imageData.data[inpos++];
+            g = imageData.data[inpos++];
+            b = imageData.data[inpos++];
+            a = imageData.data[inpos++];
+
+			index = r; 
+			
+				if(palette[index]){
+					imageData.data[outpos++] = palette[index][0];
+					imageData.data[outpos++] = palette[index][1];
+					imageData.data[outpos++] = palette[index][2];
+				}else{
+					imageData.data[outpos++] = r;
+					imageData.data[outpos++] = g;
+					imageData.data[outpos++] = b;
+				}
+				imageData.data[outpos++] = a;
+        }
+    }
+	c.clearRect(0, 0, width, height);
+    c.putImageData(imageData, 0, 0);
+}
+
+
+function init(){
+	xml_url = document.getElementById("palette").value;
+	url_img = document.getElementById("image").value;
+	
+	if(xml_url.indexOf('http') == -1)xml_url = 'http://'+xml_url;
+	if(url_img.indexOf('http') == -1)url_img = 'http://'+url_img;
+	
+	//"http://localhost/p.xml";
+	
+	im = new Image();
+	im.crossOrigin = '';
+	im.onload = imageLoaded;
+	im.src = url_img;//"http://localhost/src.png";
+}
+</script>
+
+
+</body>
+</html>
