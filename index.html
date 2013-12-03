@@ -20,7 +20,14 @@
 	</head>
 
 <body>
-<div> url палитры:<input type="Text" id="palette"> url картинки:<input type="Text" id="image"><input type="button" value="рисовать" onclick="init()"></div>
+<!--
+headers
+Access-Control-Allow-Origin:*
+Access-Control-Cllow-Methods:GET, POST, PUT, DELETE, OPTIONS
+Access-Control-Request-Headers:origin, content-type, accept
+Access-Control-Allow-Credentials:true
+-->
+<div> url палитры:<input value="" type="Text" id="palette"> url картинки:<input value="" type="Text" id="image"><input type="button" value="рисовать" onclick="init()"></div>
 <div id="wait"></div>
 <canvas id="can">Canvas</canvas> <!--width="2562" height="1943"-->
 
@@ -29,7 +36,7 @@
 
 function imageLoaded(event){
 
-	if (window.XMLHttpRequest){// IE7+, Firefox, Chrome, Opera, Safari
+	if (window.XMLHttpRequest){
 		xmlhttp=new XMLHttpRequest();
 	}
 	
@@ -101,11 +108,34 @@ function init(){
 	if(url_img.indexOf('http') == -1)url_img = 'http://'+url_img;
 	
 	//"http://localhost/p.xml";
-	
+	/*
 	im = new Image();
-	im.crossOrigin = '';
+	im.crossOrigin = "Anonymous";
 	im.onload = imageLoaded;
 	im.src = url_img;//"http://localhost/src.png";
+	*/
+	window.URL = window.URL || window.webkitURL;
+
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', url_img, true);
+	xhr.responseType = 'blob';
+
+	xhr.onload = function(e) {
+		if (this.status == 200) {
+			var blob = this.response;
+		    var img = document.createElement('img');
+    		img.onload = function(e) {
+				window.URL.revokeObjectURL(img.src);
+	    	};
+    		img.src = window.URL.createObjectURL(blob);
+	    	//document.body.appendChild(img);
+			
+			im = new Image();
+			im.onload = imageLoaded;
+			im.src = img.src;
+    	}
+	};
+	xhr.send();
 }
 </script>
 
